@@ -4,6 +4,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -13,7 +14,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.BlockView;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class BlockBreaker {
     private final Direction direction = Direction.UP;
@@ -25,6 +28,18 @@ public class BlockBreaker {
     @Environment(EnvType.CLIENT)
     public void tryBreak(BlockPos blockPos, MinecraftClient client) {
         BlockState state = client.world.getBlockState(blockPos);
+        Set<Block> torches = new HashSet<>() {{
+            add(Blocks.TORCH);
+            add(Blocks.WALL_TORCH);
+            add(Blocks.REDSTONE_TORCH);
+            add(Blocks.REDSTONE_WALL_TORCH);
+            add(Blocks.SOUL_TORCH);
+            add(Blocks.SOUL_WALL_TORCH);
+        }};
+
+        if(torches.contains(state.getBlock()))
+            return;
+
         if (!state.isAir() && (!blockSelEnabled || Objects.equals(client.world.getBlockState(blockPos).getBlock(), lastMinedBlock))) {
             float speed = getMineSpeed(client, client.player.getInventory().selectedSlot, state);
             if (speed <= 1.0f) {
