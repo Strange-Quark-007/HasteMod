@@ -23,34 +23,38 @@ public class BlockBreaker {
     private Block lastMinedBlock = null;
     private boolean enabled = false;
     private boolean blockSelEnabled = false;
+    private boolean toolSwitchEnabled = false;
     private final int range = 4;
+    private final Set<Block> torches = new HashSet<>() {{
+        add(Blocks.TORCH);
+        add(Blocks.WALL_TORCH);
+        add(Blocks.REDSTONE_TORCH);
+        add(Blocks.REDSTONE_WALL_TORCH);
+        add(Blocks.SOUL_TORCH);
+        add(Blocks.SOUL_WALL_TORCH);
+    }};
 
     @Environment(EnvType.CLIENT)
     public void tryBreak(BlockPos blockPos, MinecraftClient client) {
         BlockState state = client.world.getBlockState(blockPos);
-        Set<Block> torches = new HashSet<>() {{
-            add(Blocks.TORCH);
-            add(Blocks.WALL_TORCH);
-            add(Blocks.REDSTONE_TORCH);
-            add(Blocks.REDSTONE_WALL_TORCH);
-            add(Blocks.SOUL_TORCH);
-            add(Blocks.SOUL_WALL_TORCH);
-        }};
 
         if(torches.contains(state.getBlock()))
             return;
 
         if (!state.isAir() && (!blockSelEnabled || Objects.equals(client.world.getBlockState(blockPos).getBlock(), lastMinedBlock))) {
-            float speed = getMineSpeed(client, client.player.getInventory().selectedSlot, state);
-            if (speed <= 1.0f) {
-                for (int i = 0; i < client.player.getInventory().main.size(); i++) {
 
-                    float newSpeed = getMineSpeed(client, i, state);
+            if(toolSwitchEnabled) {
+                float speed = getMineSpeed(client, client.player.getInventory().selectedSlot, state);
+                if (speed <= 1.0f) {
+                    for (int i = 0; i < client.player.getInventory().main.size(); i++) {
 
-                    if (newSpeed > 1.0f) {
-                        if (client.player.getInventory().selectedSlot == i) break;
-                        client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, 36 + client.player.getInventory().selectedSlot, i, SlotActionType.SWAP, client.player);
-                        break;
+                        float newSpeed = getMineSpeed(client, i, state);
+
+                        if (newSpeed > 1.0f) {
+                            if (client.player.getInventory().selectedSlot == i) break;
+                            client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, 36 + client.player.getInventory().selectedSlot, i, SlotActionType.SWAP, client.player);
+                            break;
+                        }
                     }
                 }
             }
@@ -74,6 +78,7 @@ public class BlockBreaker {
                 return;
             }
         }
+
         if (HasteModClient.getToggleBlockSelKey().wasPressed() && !client.isPaused()) {
             blockSelEnabled = !blockSelEnabled;
             if (blockSelEnabled) {
@@ -82,6 +87,16 @@ public class BlockBreaker {
                 client.player.sendMessage(Text.of("§eToggled §dBlock Selection Mode §eto §coff"));
             }
         }
+
+        if (HasteModClient.getToggleToolSwitchKey().wasPressed() && !client.isPaused()) {
+            toolSwitchEnabled = !toolSwitchEnabled;
+            if (toolSwitchEnabled) {
+                client.player.sendMessage(Text.of("§eToggled §dToolSwitch §aon"));
+            } else {
+                client.player.sendMessage(Text.of("§eToggled §dToolSwitch §aoff"));
+            }
+        }
+
         if ((lastMinedBlock == null && blockSelEnabled) || !enabled ) return;
         if (!HasteModClient.getActivateKey().isPressed()) return;
 

@@ -22,6 +22,7 @@ public class HasteModClient implements ClientModInitializer {
     private static KeyBinding useKey;
     private static KeyBinding toggleKey;
     private static KeyBinding toggleBlockSelKey;
+    private static KeyBinding toggleToolSwitchKey;
     private static BlockBreaker bbreaker = new BlockBreaker();
 
     @Override
@@ -49,7 +50,15 @@ public class HasteModClient implements ClientModInitializer {
                 "HasteMod"
         ));
 
-        ClientTickEvents.END_CLIENT_TICK.register((tick) -> bbreaker.onTick(MinecraftClient.getInstance()));/*
+        toggleToolSwitchKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "Toggle Tool Switch  on/off",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_I,
+                "HasteMod"
+        ));
+
+        ClientTickEvents.END_CLIENT_TICK.register((tick) -> bbreaker.onTick(MinecraftClient.getInstance()));
+        /*
         ClientTickEvents.START_CLIENT_TICK.register((tick) -> {
             if (!bbreaker.isBreaking || MinecraftClient.getInstance().player == null) return;
             bbreaker.isBreaking = false;
@@ -69,6 +78,10 @@ public class HasteModClient implements ClientModInitializer {
 
     public static KeyBinding getToggleBlockSelKey() {
         return toggleBlockSelKey;
+    }
+
+    public static KeyBinding getToggleToolSwitchKey() {
+        return toggleToolSwitchKey;
     }
 
     public static void onBlockBreak(BlockPos pos) {
